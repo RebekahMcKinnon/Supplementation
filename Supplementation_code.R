@@ -4,6 +4,9 @@ library(brms)
 library(rstan)
 library(ggplot2)
 library(bayestestR)
+library(bayesplot)
+library(tidybayes)
+library(stats)
 
 ##### load data as CSV files -----
 updated_comb <- read.csv("G:/.shortcut-targets-by-id/15aIOTzK-SdA0QZzPxWaQk_8cNO0OoEUl/Rebekah thesis/SUPPLEMENTATION PAPER/Data sheets/updated_comb.csv")
@@ -241,18 +244,24 @@ summary(hatch_date_test)
 fixef(hatch_date_test)
 # conc: no treatment related differences in hatch date of first nestling 
 
-# bayesian pvalues
-neg_count <- ifelse(fixef(hatch_date_test)[, 1] < 0, 1, 0) 
-pos_count <- ifelse(fixef(hatch_date_test)[, 1] > 0, 1, 0)
-p <- sum(neg_count) / (sum(pos_count) + sum(neg_count))
-print(p)# intercept ie control
+# proportion estimates 
+# 0 means that no estimates are in the opposite direction to the estimated effect size
+# 0.5 (max) means that half of estimates are in the opposite direction to the estimated effect size 
+# so for interpretation: a lower value indicates greater robustness of the estimate ie greater certainty that it is truth 
 
-neg_count <- ifelse(fixef(hatch_date_test)[, 2] < 0, 1, 0) 
-pos_count <- ifelse(fixef(hatch_date_test)[, 2] > 0, 1, 0)
-p <- sum(neg_count) / (sum(pos_count) + sum(neg_count))
-print(p)# supplemented 
+prop_neg <- hatch_date_test %>% 
+  spread_draws(b_ftreatment1) %>%
+  mutate(neg_count = sum(b_ftreatment1<0)) %>% 
+  mutate(pos_count= sum(b_ftreatment1>0)) %>%
+  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
+  pull(proportion_neg) %>% 
+  mean()
+prop_neg
 
-# p-values again confirm lack of treatment related differences in hatch date 
+# estimate for ftreatment1 is negative
+# so want the proportion of estimates that are POSITIVE i.e., 1-proportion of negative values 
+p <- (1-prop_neg)
+p # 0.167
 
 # p-map
 p_map(hatch_date_test, null=0, precision=2^10, method="kernel", effects= c("fixed"), component= c("all"))
@@ -274,22 +283,22 @@ number_hatched_test <- brm(number_hatched ~ ftreatment + (1|fsite) + (1|fyear),
                            control = list(adapt_delta = 0.99, max_treedepth = 20), 
                            backend = "cmdstanr")
 summary(number_hatched_test)
+fixef(number_hatched_test)
 # conc: no treatment related differences in number of nestlings hatched 
 
-# bayesian pvalues
-neg_count <- ifelse(fixef(number_hatched_test)[, 1] < 0, 1, 0) 
-pos_count <- ifelse(fixef(number_hatched_test)[, 1] > 0, 1, 0)
-p <- sum(neg_count) / (sum(pos_count) + sum(neg_count))
-print(p)# intercept ie control
-
-neg_count <- ifelse(fixef(number_hatched_test)[, 2] < 0, 1, 0) 
-pos_count <- ifelse(fixef(number_hatched_test)[, 2] > 0, 1, 0)
-p <- sum(neg_count) / (sum(pos_count) + sum(neg_count))
-print(p)# supplemented 
+prop_neg <- number_hatched_test %>% 
+  spread_draws(b_ftreatment1) %>%
+  mutate(neg_count = sum(b_ftreatment1<0)) %>% 
+  mutate(pos_count= sum(b_ftreatment1>0)) %>%
+  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
+  pull(proportion_neg) %>% 
+  mean()
+prop_neg # estimate for ftreatment1 is poritive so want this value (ie number negative)
+# 0.237
 
 # p-map
 p_map(number_hatched_test, null=0, precision=2^10, method="kernel", effects= c("fixed"), component= c("all"))
-# 0.777
+# 0.782
 
 # no statistically significant difference in the number hatched between treatment groups.
 
@@ -307,17 +316,21 @@ clutch_size_test <- brm(clutch_size ~ ftreatment + (1|fsite) + (1|fyear),
                         control = list(adapt_delta = 0.99, max_treedepth = 20), 
                         backend = "cmdstanr")
 summary(clutch_size_test)
+fixef(clutch_size_test)
 
-# bayesian pvalues
-neg_count <- ifelse(fixef(clutch_size_test)[, 1] < 0, 1, 0) 
-pos_count <- ifelse(fixef(clutch_size_test)[, 1] > 0, 1, 0)
-p <- sum(neg_count) / (sum(pos_count) + sum(neg_count))
-print(p)# intercept ie control
+prop_neg <- clutch_size_test %>% 
+  spread_draws(b_ftreatment1) %>%
+  mutate(neg_count = sum(b_ftreatment1<0)) %>% 
+  mutate(pos_count= sum(b_ftreatment1>0)) %>%
+  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
+  pull(proportion_neg) %>% 
+  mean()
+prop_neg
 
-neg_count <- ifelse(fixef(clutch_size_test)[, 2] < 0, 1, 0) 
-pos_count <- ifelse(fixef(clutch_size_test)[, 2] > 0, 1, 0)
-p <- sum(neg_count) / (sum(pos_count) + sum(neg_count))
-print(p)# supplemented 
+# estimate for ftreatment1 is negative
+# so want the proportion of estimates that are POSITIVE i.e., 1-proportion of negative values 
+p <- (1-prop_neg)
+p # 0.499
 
 # p-map
 p_map(clutch_size_test, null=0, precision=2^10, method="kernel", effects= c("fixed"), component= c("all"))
@@ -348,31 +361,55 @@ summary(ivi_model)
 fixef(ivi_model)
 ranef(ivi_model)
 
-# bayesian pvalues
-neg_count <- ifelse(fixef(ivi_model)[, 1] < 0, 1, 0) 
-pos_count <- ifelse(fixef(ivi_model)[, 1] > 0, 1, 0)
-p <- sum(neg_count) / (sum(pos_count) + sum(neg_count))
-print(p)# intercept ie control
+# proportions in opposite direction for each fixed effect
+get_variables(ivi_model)
 
-neg_count <- ifelse(fixef(ivi_model)[, 2] < 0, 1, 0) 
-pos_count <- ifelse(fixef(ivi_moddel)[, 2] > 0, 1, 0)
-p <- sum(neg_count) / (sum(pos_count) + sum(neg_count))
-print(p)# supplemented 
+# supplementation 
+prop_neg <- ivi_model %>% 
+  spread_draws(b_ftreatmenty) %>%
+  mutate(neg_count = sum(b_ftreatmenty<0)) %>% 
+  mutate(pos_count= sum(b_ftreatmenty>0)) %>%
+  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
+  pull(proportion_neg) %>% 
+  mean()
+prop_neg # estimate is positive so want this value
+# 0.323
 
-neg_count <- ifelse(fixef(ivi_model)[, 3] < 0, 1, 0) 
-pos_count <- ifelse(fixef(ivi_model)[, 3] > 0, 1, 0)
-p <- sum(neg_count) / (sum(pos_count) + sum(neg_count))
-print(p)# brood size 
+# brood size
+prop_neg <- ivi_model %>% 
+  spread_draws(b_brood_size_sc) %>%
+  mutate(neg_count = sum(b_brood_size_sc<0)) %>% 
+  mutate(pos_count= sum(b_brood_size_sc>0)) %>%
+  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
+  pull(proportion_neg) %>% 
+  mean()
+prop_neg # estimate negative so want positive 
+p <- (1-prop_neg)
+p # 0
 
-neg_count <- ifelse(fixef(ivi_model)[, 4] < 0, 1, 0) 
-pos_count <- ifelse(fixef(ivi_moddel)[, 4] > 0, 1, 0)
-p <- sum(neg_count) / (sum(pos_count) + sum(neg_count))
-print(p)# hatch date 
+# hatch date
+prop_neg <- ivi_model %>% 
+  spread_draws(b_hatch_date_sc) %>%
+  mutate(neg_count = sum(b_hatch_date_sc<0)) %>% 
+  mutate(pos_count= sum(b_hatch_date_sc>0)) %>%
+  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
+  pull(proportion_neg) %>% 
+  mean()
+prop_neg # estimate negative so want positive 
+p <- (1-prop_neg)
+p # 0.125
 
-neg_count <- ifelse(fixef(ivi_model)[, 5] < 0, 1, 0) 
-pos_count <- ifelse(fixef(ivi_moddel)[, 5] > 0, 1, 0)
-p <- sum(neg_count) / (sum(pos_count) + sum(neg_count))
-print(p)# nestling age 
+# nestling age 
+prop_neg <- ivi_model %>% 
+  spread_draws(b_age_sc) %>%
+  mutate(neg_count = sum(b_age_sc<0)) %>% 
+  mutate(pos_count= sum(b_age_sc>0)) %>%
+  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
+  pull(proportion_neg) %>% 
+  mean()
+prop_neg # estimate negative so want positive 
+p <- (1-prop_neg)
+p # 0
 
 # p-map
 p_map(ivi_model, null=0, precision=2^10, method="kernel", effects= c("fixed"), component= c("all"))
@@ -393,26 +430,17 @@ summary(ivi_model2)
 fixef(ivi_model2)
 ranef(ivi_model2)
 
-# bayesian pvalues
-neg_count <- ifelse(fixef(ivi_model2)[, 1] < 0, 1, 0) 
-pos_count <- ifelse(fixef(ivi_model2)[, 1] > 0, 1, 0)
-p <- sum(neg_count) / (sum(pos_count) + sum(neg_count))
-print(p)# intercept ie control
-
-neg_count <- ifelse(fixef(ivi_model2)[, 2] < 0, 1, 0) 
-pos_count <- ifelse(fixef(ivi_moddel2)[, 2] > 0, 1, 0)
-p <- sum(neg_count) / (sum(pos_count) + sum(neg_count))
-print(p)# supplemented 
-
-neg_count <- ifelse(fixef(ivi_model2)[, 3] < 0, 1, 0) 
-pos_count <- ifelse(fixef(ivi_model2)[, 3] > 0, 1, 0)
-p <- sum(neg_count) / (sum(pos_count) + sum(neg_count))
-print(p)# hatch date 
-
-neg_count <- ifelse(fixef(ivi_model2)[, 4] < 0, 1, 0) 
-pos_count <- ifelse(fixef(ivi_moddel2)[, 4] > 0, 1, 0)
-p <- sum(neg_count) / (sum(pos_count) + sum(neg_count))
-print(p)# nestling age 
+# proportion estimates 
+# supplementation 
+prop_neg <- ivi_model2 %>% 
+  spread_draws(b_ftreatmenty) %>%
+  mutate(neg_count = sum(b_ftreatmenty<0)) %>% 
+  mutate(pos_count= sum(b_ftreatmenty>0)) %>%
+  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
+  pull(proportion_neg) %>% 
+  mean()
+prop_neg # estimate is positive so want this value
+# 0.484
 
 #p-map
 p_map(ivi_model2, null=0, precision=2^10, method="kernel", effects= c("all"), component= c("all"))
@@ -443,26 +471,43 @@ summary(survival_prob_model2)
 fixef(survival_prob_model2)
 ranef(survival_prob_model2)
 
-# bayesian pvalues
-neg_count <- ifelse(fixef(survival_prob_model2)[, 1] < 0, 1, 0) 
-pos_count <- ifelse(fixef(survival_prob_model2)[, 1] > 0, 1, 0)
-p <- sum(neg_count) / (sum(pos_count) + sum(neg_count))
-print(p)# intercept ie control
+# proportion estimates 
 
-neg_count <- ifelse(fixef(survival_prob_model2)[, 2] < 0, 1, 0) 
-pos_count <- ifelse(fixef(survival_prob_model2)[, 2] > 0, 1, 0)
-p <- sum(neg_count) / (sum(pos_count) + sum(neg_count))
-print(p)# supplemented 
+# supplementation 
+prop_neg <- survival_prob_model2 %>% 
+  spread_draws(b_ftreatment1) %>%
+  mutate(neg_count = sum(b_ftreatment1<0)) %>% 
+  mutate(pos_count= sum(b_ftreatment1>0)) %>%
+  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
+  pull(proportion_neg) %>% 
+  mean()
+prop_neg# estimate positive so want this 
+# 0
 
-neg_count <- ifelse(fixef(survival_prob_model2)[, 3] < 0, 1, 0) 
-pos_count <- ifelse(fixef(survival_prob_model2)[, 3] > 0, 1, 0)
-p <- sum(neg_count) / (sum(pos_count) + sum(neg_count))
-print(p)# number hatched 
+# number hatched 
+prop_neg <- survival_prob_model2 %>% 
+  spread_draws(b_number_hatched_sc) %>%
+  mutate(neg_count = sum(b_number_hatched_sc<0)) %>% 
+  mutate(pos_count= sum(b_number_hatched_sc>0)) %>%
+  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
+  pull(proportion_neg) %>% 
+  mean()
+prop_neg# estimate negative
+p <- (1-prop_neg)
+p # 0.036
 
-neg_count <- ifelse(fixef(survival_prob_model2)[, 4] < 0, 1, 0) 
-pos_count <- ifelse(fixef(survival_prob_model2)[, 4] > 0, 1, 0)
-p <- sum(neg_count) / (sum(pos_count) + sum(neg_count))
-print(p)# hatch date 
+# hatch date 
+prop_neg <- survival_prob_model2 %>% 
+  spread_draws(b_hatch_date_sc) %>%
+  mutate(neg_count = sum(b_hatch_date_sc<0)) %>% 
+  mutate(pos_count= sum(b_hatch_date_sc>0)) %>%
+  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
+  pull(proportion_neg) %>% 
+  mean()
+prop_neg# estimate negative
+p <- (1-prop_neg)
+p # <0.001
+
 
 # p-map
 p_map(survival_prob_model2, null=0, precision=2^10, method="kernel", effects= c("all"), component= c("all"))
@@ -490,31 +535,53 @@ summary(body_mass_fledge)
 fixef(body_mass_fledge)
 ranef(body_mass_fledge)
 
-# Bayesian p-values 
-neg_count <- ifelse(fixef(body_mass_fledge)[, 1] < 0, 1, 0) 
-pos_count <- ifelse(fixef(body_mass_fledge)[, 1] > 0, 1, 0)
-p <- sum(neg_count) / (sum(pos_count) + sum(neg_count))
-print(p)# intercept ie control
+# proportion estimates 
 
-neg_count <- ifelse(fixef(body_mass_fledge)[, 2] < 0, 1, 0) 
-pos_count <- ifelse(fixef(body_mass_fledge)[, 2] > 0, 1, 0)
-p <- sum(neg_count) / (sum(pos_count) + sum(neg_count))
-print(p)# supplemented 
+# supplementation 
+prop_neg <- body_mass_fledge %>% 
+  spread_draws(b_ftreatment1) %>%
+  mutate(neg_count = sum(b_ftreatment1<0)) %>% 
+  mutate(pos_count= sum(b_ftreatment1>0)) %>%
+  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
+  pull(proportion_neg) %>% 
+  mean()
+prop_neg# estimate positive so want this 
+# 0.288
 
-neg_count <- ifelse(fixef(body_mass_fledge)[, 3] < 0, 1, 0) 
-pos_count <- ifelse(fixef(body_mass_fledge)[, 3] > 0, 1, 0)
-p <- sum(neg_count) / (sum(pos_count) + sum(neg_count))
-print(p) # brood size
+# brood size 
+prop_neg <- body_mass_fledge %>% 
+  spread_draws(b_brood_size_sc) %>%
+  mutate(neg_count = sum(b_brood_size_sc<0)) %>% 
+  mutate(pos_count= sum(b_brood_size_sc>0)) %>%
+  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
+  pull(proportion_neg) %>% 
+  mean()
+prop_neg# estimate negative
+p <- (1-prop_neg)
+p # 0.087
 
-neg_count <- ifelse(fixef(body_mass_fledge)[, 4] < 0, 1, 0) 
-pos_count <- ifelse(fixef(body_mass_fledge)[, 4] > 0, 1, 0)
-p <- sum(neg_count) / (sum(pos_count) + sum(neg_count))
-print(p) # hatch date 
+# hatch date 
+prop_neg <- body_mass_fledge %>% 
+  spread_draws(b_hatch_date_sc) %>%
+  mutate(neg_count = sum(b_hatch_date_sc<0)) %>% 
+  mutate(pos_count= sum(b_hatch_date_sc>0)) %>%
+  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
+  pull(proportion_neg) %>% 
+  mean()
+prop_neg# estimate negative
+p <- (1-prop_neg)
+p # 0.194
 
-neg_count <- ifelse(fixef(body_mass_fledge)[, 5] < 0, 1, 0) 
-pos_count <- ifelse(fixef(body_mass_fledge)[, 5] > 0, 1, 0)
-p <- sum(neg_count) / (sum(pos_count) + sum(neg_count))
-print(p) # nestling age 
+# nestling age 
+prop_neg <- body_mass_fledge %>% 
+  spread_draws(b_age_sc) %>%
+  mutate(neg_count = sum(b_age_sc<0)) %>% 
+  mutate(pos_count= sum(b_age_sc>0)) %>%
+  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
+  pull(proportion_neg) %>% 
+  mean()
+prop_neg # estimate positive so want this 
+# 0.045
 
 # p-map
 p_map(body_mass_fledge, null=0, precision=2^10, method="kernel", effects= c("all"), component= c("all"))
@@ -588,10 +655,9 @@ final_plot <- ggplot(results, aes(x = models, y = estimates, color = color)) +
         strip.text.x = element_text(size = 12, face = "bold"),  # Modify top axis text
         strip.text.y = element_text(size = 12, face = "bold")) +  # Modify right axis text
   facet_wrap(~ response_variable, scales = "free_y", ncol = 1)
-
+final_plot
 
 # save fig in high res 
-
 # Specify the file path and name
 file_path <- "G:/.shortcut-targets-by-id/15aIOTzK-SdA0QZzPxWaQk_8cNO0OoEUl/Rebekah thesis/SUPPLEMENTATION PAPER/figures/Supp_Figure_1_600DPI.tiff"
   
@@ -654,7 +720,6 @@ ggplot(quail, aes(x = date, y = Supp, color = factor(Year))) +
   labs(x = "Date", y = "Supp", color = "Year") +
   theme_minimal()
 
-library(ggplot2)
 
 # Convert "date" variable to date format
 quail$date <- as.Date(quail$date)
@@ -695,9 +760,6 @@ exp(0.08)
 exp(5.5)/60
 
 
-
-library(ggplot2)
-
 # Create a data frame
 results <- data.frame(
   models = c("IVI", "Survival", "Body Condition"),
@@ -720,11 +782,7 @@ ggplot(results, aes(x = models, y = estimates, color = models)) +
   theme_minimal() +
   theme(legend.position = "none")  # Remove legend if not needed
 
-##
-
-# Install and load necessary packages
-install.packages("ggplot2")
-library(ggplot2)
+##old figure versions
 
 # Create a data frame
 results <- data.frame(
