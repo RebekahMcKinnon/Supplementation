@@ -361,56 +361,6 @@ summary(ivi_model)
 fixef(ivi_model)
 ranef(ivi_model)
 
-# proportions in opposite direction for each fixed effect
-get_variables(ivi_model)
-
-# supplementation 
-prop_neg <- ivi_model %>% 
-  spread_draws(b_ftreatmenty) %>%
-  mutate(neg_count = sum(b_ftreatmenty<0)) %>% 
-  mutate(pos_count= sum(b_ftreatmenty>0)) %>%
-  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
-  pull(proportion_neg) %>% 
-  mean()
-prop_neg # estimate is positive so want this value
-# 0.323
-
-# brood size
-prop_neg <- ivi_model %>% 
-  spread_draws(b_brood_size_sc) %>%
-  mutate(neg_count = sum(b_brood_size_sc<0)) %>% 
-  mutate(pos_count= sum(b_brood_size_sc>0)) %>%
-  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
-  pull(proportion_neg) %>% 
-  mean()
-prop_neg # estimate negative so want positive 
-p <- (1-prop_neg)
-p # 0
-
-# hatch date
-prop_neg <- ivi_model %>% 
-  spread_draws(b_hatch_date_sc) %>%
-  mutate(neg_count = sum(b_hatch_date_sc<0)) %>% 
-  mutate(pos_count= sum(b_hatch_date_sc>0)) %>%
-  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
-  pull(proportion_neg) %>% 
-  mean()
-prop_neg # estimate negative so want positive 
-p <- (1-prop_neg)
-p # 0.125
-
-# nestling age 
-prop_neg <- ivi_model %>% 
-  spread_draws(b_age_sc) %>%
-  mutate(neg_count = sum(b_age_sc<0)) %>% 
-  mutate(pos_count= sum(b_age_sc>0)) %>%
-  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
-  pull(proportion_neg) %>% 
-  mean()
-prop_neg # estimate negative so want positive 
-p <- (1-prop_neg)
-p # 0
-
 # p-map
 p_map(ivi_model, null=0, precision=2^10, method="kernel", effects= c("fixed"), component= c("all"))
 
@@ -429,18 +379,6 @@ ivi_model2 <- brm(bf(logIVI ~ 1 + ftreatment + hatch_date_sc + age_sc +
 summary(ivi_model2)
 fixef(ivi_model2)
 ranef(ivi_model2)
-
-# proportion estimates 
-# supplementation 
-prop_neg <- ivi_model2 %>% 
-  spread_draws(b_ftreatmenty) %>%
-  mutate(neg_count = sum(b_ftreatmenty<0)) %>% 
-  mutate(pos_count= sum(b_ftreatmenty>0)) %>%
-  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
-  pull(proportion_neg) %>% 
-  mean()
-prop_neg # estimate is positive so want this value
-# 0.484
 
 #p-map
 p_map(ivi_model2, null=0, precision=2^10, method="kernel", effects= c("all"), component= c("all"))
@@ -471,44 +409,6 @@ summary(survival_prob_model2)
 fixef(survival_prob_model2)
 ranef(survival_prob_model2)
 
-# proportion estimates 
-
-# supplementation 
-prop_neg <- survival_prob_model2 %>% 
-  spread_draws(b_ftreatment1) %>%
-  mutate(neg_count = sum(b_ftreatment1<0)) %>% 
-  mutate(pos_count= sum(b_ftreatment1>0)) %>%
-  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
-  pull(proportion_neg) %>% 
-  mean()
-prop_neg# estimate positive so want this 
-# 0
-
-# number hatched 
-prop_neg <- survival_prob_model2 %>% 
-  spread_draws(b_number_hatched_sc) %>%
-  mutate(neg_count = sum(b_number_hatched_sc<0)) %>% 
-  mutate(pos_count= sum(b_number_hatched_sc>0)) %>%
-  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
-  pull(proportion_neg) %>% 
-  mean()
-prop_neg# estimate negative
-p <- (1-prop_neg)
-p # 0.036
-
-# hatch date 
-prop_neg <- survival_prob_model2 %>% 
-  spread_draws(b_hatch_date_sc) %>%
-  mutate(neg_count = sum(b_hatch_date_sc<0)) %>% 
-  mutate(pos_count= sum(b_hatch_date_sc>0)) %>%
-  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
-  pull(proportion_neg) %>% 
-  mean()
-prop_neg# estimate negative
-p <- (1-prop_neg)
-p # <0.001
-
-
 # p-map
 p_map(survival_prob_model2, null=0, precision=2^10, method="kernel", effects= c("all"), component= c("all"))
 
@@ -535,20 +435,14 @@ summary(body_mass_fledge)
 fixef(body_mass_fledge)
 ranef(body_mass_fledge)
 
-# proportion estimates 
+# p-map
+p_map(body_mass_fledge, null=0, precision=2^10, method="kernel", effects= c("all"), component= c("all"))
 
-# supplementation 
-prop_neg <- body_mass_fledge %>% 
-  spread_draws(b_ftreatment1) %>%
-  mutate(neg_count = sum(b_ftreatment1<0)) %>% 
-  mutate(pos_count= sum(b_ftreatment1>0)) %>%
-  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
-  pull(proportion_neg) %>% 
-  mean()
-prop_neg# estimate positive so want this 
-# 0.288
+##### creating function for calculating proportion values -----
 
-# brood size 
+# without a function, the code needed to do this with a brms model is long and makes the code look messy 
+# it also requires the user to manually check and correct the proportion to be the one in the opposite direction of the estimated effect 
+# for example:
 prop_neg <- body_mass_fledge %>% 
   spread_draws(b_brood_size_sc) %>%
   mutate(neg_count = sum(b_brood_size_sc<0)) %>% 
@@ -556,35 +450,84 @@ prop_neg <- body_mass_fledge %>%
   mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
   pull(proportion_neg) %>% 
   mean()
-prop_neg# estimate negative
+prop_neg# final estimate from model was negative so need to calculate proportion of positive estimates 
 p <- (1-prop_neg)
 p # 0.087
 
-# hatch date 
-prop_neg <- body_mass_fledge %>% 
-  spread_draws(b_hatch_date_sc) %>%
-  mutate(neg_count = sum(b_hatch_date_sc<0)) %>% 
-  mutate(pos_count= sum(b_hatch_date_sc>0)) %>%
-  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
-  pull(proportion_neg) %>% 
-  mean()
-prop_neg# estimate negative
-p <- (1-prop_neg)
-p # 0.194
+# to fix this: 
+# I first created a function that just calculates how many estimates from the posterior draws are negative 
+prop_calc_neg <- function(model,effect) {
+  model_name <- deparse(substitute(model))
+  result <- model %>%
+    spread_draws({{ effect }}) %>%
+    mutate(neg_count = sum({{ effect }} < 0)) %>%
+    mutate(pos_count = sum({{ effect }} > 0)) %>%
+    mutate(proportion_neg = sum(neg_count) / (sum(pos_count) + sum(neg_count))) %>%
+    pull(proportion_neg) %>%
+    mean()
+  
+  cat("in", model_name, "proportion of negative estimates for", deparse(substitute(effect)), ":", result, "\n")
+  return(result)
+}
 
-# nestling age 
-prop_neg <- body_mass_fledge %>% 
-  spread_draws(b_age_sc) %>%
-  mutate(neg_count = sum(b_age_sc<0)) %>% 
-  mutate(pos_count= sum(b_age_sc>0)) %>%
-  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
-  pull(proportion_neg) %>% 
-  mean()
-prop_neg # estimate positive so want this 
-# 0.045
+# then upgraded to function that calculated proportion of estimates in opposite direction of estimated effect 
+prop_opposite <- function(model, effect) {
+  model_name <- deparse(substitute(model))
+  
+  result <- model %>%
+    spread_draws({{ effect }}) %>%
+    mutate(neg_count = sum({{ effect }} < 0)) %>%
+    mutate(pos_count = sum({{ effect }} > 0)) %>%
+    mutate(proportion_neg = sum(neg_count) / (sum(pos_count) + sum(neg_count))) %>%
+    pull(proportion_neg) %>%
+    mean()
+  
+  if (result > 0.5) {
+    result <- 1 - result
+    cat("in", model_name, "proportion of estimates in opposite direction for", deparse(substitute(effect)), ":", result, "\n")
+  } else {
+    cat("in", model_name, "proportion of estimates in opposite direction for", deparse(substitute(effect)), ":", result, "\n")
+  }
+  
+  return(result)
+}
 
-# p-map
-p_map(body_mass_fledge, null=0, precision=2^10, method="kernel", effects= c("all"), component= c("all"))
+# examples of usage in next section 
+# to use the function user needs to load: tidyverse / dplyr
+# (must also provide a valid model object and effect)
+
+# note: 
+# currently written to work with brms models (ie using spread_draws)
+# but could be easily modified to be used with other Bayesian models 
+# e.g., by adding a line to inherit model class 
+
+##### using created function to calculate proportion values for models -----
+# 1. IVI
+# a
+# fixed effects: ftreatment + brood_size_sc + hatch_date_sc + age_sc
+
+prop <- prop_opposite(ivi_model, b_ftreatmenty)
+prop <- prop_opposite(ivi_model, b_brood_size_sc)
+prop <- prop_opposite(ivi_model, b_hatch_date_sc)
+prop <- prop_opposite(ivi_model, b_age_sc)
+
+# IVI 
+# b
+# just need for ftreatment 
+prop <- prop_opposite(ivi_model2, b_ftreatmenty)
+
+# 2. fledging success
+# fixed effects: ftreatment + number_hatched_sc + hatch_date_sc
+prop <- prop_opposite(survival_prob_model2, b_ftreatment1)
+prop <- prop_opposite(survival_prob_model2, b_number_hatched_sc)
+prop <- prop_opposite(survival_prob_model2, b_hatch_date_sc)
+
+# 3. Body mass at fledge 
+# fixed effects: ftreatment + brood_size_sc + hatch_date_sc + age_sc
+prop <- prop_opposite(body_mass_fledge, b_ftreatment1)
+prop <- prop_opposite(body_mass_fledge, b_brood_size_sc)
+prop <- prop_opposite(body_mass_fledge, b_hatch_date_sc)
+prop <- prop_opposite(body_mass_fledge, b_age_sc)
 
 ##### creating figures -----
 # Create a data frame with control data included
@@ -663,6 +606,15 @@ file_path <- "G:/.shortcut-targets-by-id/15aIOTzK-SdA0QZzPxWaQk_8cNO0OoEUl/Rebek
   
 # Save the combined plot with high DPI
 ggsave(file_path, plot = final_plot, width = 12, height = 8, dpi = 600)
+
+
+
+
+
+
+
+
+
 
 
 
