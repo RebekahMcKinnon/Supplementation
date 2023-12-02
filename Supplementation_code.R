@@ -244,25 +244,6 @@ summary(hatch_date_test)
 fixef(hatch_date_test)
 # conc: no treatment related differences in hatch date of first nestling 
 
-# proportion estimates 
-# 0 means that no estimates are in the opposite direction to the estimated effect size
-# 0.5 (max) means that half of estimates are in the opposite direction to the estimated effect size 
-# so for interpretation: a lower value indicates greater robustness of the estimate ie greater certainty that it is truth 
-
-prop_neg <- hatch_date_test %>% 
-  spread_draws(b_ftreatment1) %>%
-  mutate(neg_count = sum(b_ftreatment1<0)) %>% 
-  mutate(pos_count= sum(b_ftreatment1>0)) %>%
-  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
-  pull(proportion_neg) %>% 
-  mean()
-prop_neg
-
-# estimate for ftreatment1 is negative
-# so want the proportion of estimates that are POSITIVE i.e., 1-proportion of negative values 
-p <- (1-prop_neg)
-p # 0.167
-
 # p-map
 p_map(hatch_date_test, null=0, precision=2^10, method="kernel", effects= c("fixed"), component= c("all"))
 # 0.652
@@ -286,21 +267,9 @@ summary(number_hatched_test)
 fixef(number_hatched_test)
 # conc: no treatment related differences in number of nestlings hatched 
 
-prop_neg <- number_hatched_test %>% 
-  spread_draws(b_ftreatment1) %>%
-  mutate(neg_count = sum(b_ftreatment1<0)) %>% 
-  mutate(pos_count= sum(b_ftreatment1>0)) %>%
-  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
-  pull(proportion_neg) %>% 
-  mean()
-prop_neg # estimate for ftreatment1 is poritive so want this value (ie number negative)
-# 0.237
-
 # p-map
 p_map(number_hatched_test, null=0, precision=2^10, method="kernel", effects= c("fixed"), component= c("all"))
 # 0.782
-
-# no statistically significant difference in the number hatched between treatment groups.
 
 ## 3. treatment related differences in clutch size 
 
@@ -318,25 +287,9 @@ clutch_size_test <- brm(clutch_size ~ ftreatment + (1|fsite) + (1|fyear),
 summary(clutch_size_test)
 fixef(clutch_size_test)
 
-prop_neg <- clutch_size_test %>% 
-  spread_draws(b_ftreatment1) %>%
-  mutate(neg_count = sum(b_ftreatment1<0)) %>% 
-  mutate(pos_count= sum(b_ftreatment1>0)) %>%
-  mutate(proportion_neg = sum(neg_count)/(sum(pos_count)+ sum(neg_count))) %>% 
-  pull(proportion_neg) %>% 
-  mean()
-prop_neg
-
-# estimate for ftreatment1 is negative
-# so want the proportion of estimates that are POSITIVE i.e., 1-proportion of negative values 
-p <- (1-prop_neg)
-p # 0.499
-
 # p-map
 p_map(clutch_size_test, null=0, precision=2^10, method="kernel", effects= c("fixed"), component= c("all"))
 #0.995
-
-# no statistically significant difference in clutch size between treatment groups
 
 ##### models testing research questions -----
 
@@ -502,6 +455,13 @@ prop_opposite <- function(model, effect) {
 # e.g., by adding a line to inherit model class 
 
 ##### using created function to calculate proportion values for models -----
+## models confirming no treatment related differences 
+
+prop <- prop_opposite(hatch_date_test, b_ftreatment1)
+prop <- prop_opposite(number_hatched_test, b_ftreatment1)
+prop <- prop_opposite(clutch_size_test, b_ftreatment1)
+
+## models testing research questions 
 # 1. IVI
 # a
 # fixed effects: ftreatment + brood_size_sc + hatch_date_sc + age_sc
@@ -790,4 +750,5 @@ ggplot(results, aes(x = models, y = estimates, color = color)) +
         panel.grid.minor = element_blank(),  # Remove minor grid lines
         axis.text.x = element_text(size = 16, face = "bold"),  # Modify x-axis text
         axis.text.y = element_text(size = 12, face = "bold"))  # Modify y-axis text
+
 
