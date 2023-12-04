@@ -7,6 +7,7 @@ library(bayestestR)
 library(bayesplot)
 library(tidybayes)
 library(stats)
+library(tidyr)
 
 ##### load data as CSV files -----
 updated_comb <- read.csv("G:/.shortcut-targets-by-id/15aIOTzK-SdA0QZzPxWaQk_8cNO0OoEUl/Rebekah thesis/SUPPLEMENTATION PAPER/Data sheets/updated_comb.csv")
@@ -245,8 +246,14 @@ fixef(hatch_date_test)
 # conc: no treatment related differences in hatch date of first nestling 
 
 # p-map
-p_map(hatch_date_test, null=0, precision=2^10, method="kernel", effects= c("fixed"), component= c("all"))
-# 0.652
+p_map(hatch_date_test, null=0, precision=2^10, method="kernel", effects= c("fixed"), component= c("all"))# 0.652
+p_direction(hatch_date_test)
+#Probability of Direction 
+
+#Parameter   |     pd
+#(Intercept) |   100%
+#ftreatment1 | 83.23%
+
 
 ## 2. treatment related differences in number of nestlings hatched 
 
@@ -270,6 +277,12 @@ fixef(number_hatched_test)
 # p-map
 p_map(number_hatched_test, null=0, precision=2^10, method="kernel", effects= c("fixed"), component= c("all"))
 # 0.782
+p_direction(number_hatched_test)
+#Probability of Direction 
+
+#Parameter   |     pd
+#  (Intercept) |   100%
+#ftreatment1 | 76.34%
 
 ## 3. treatment related differences in clutch size 
 
@@ -290,6 +303,12 @@ fixef(clutch_size_test)
 # p-map
 p_map(clutch_size_test, null=0, precision=2^10, method="kernel", effects= c("fixed"), component= c("all"))
 #0.995
+p_direction(clutch_size_test)
+#Probability of Direction 
+
+#Parameter   |     pd
+#  (Intercept) |   100%
+#ftreatment1 | 50.01%
 
 ##### models testing research questions -----
 
@@ -316,6 +335,15 @@ ranef(ivi_model)
 
 # p-map
 p_map(ivi_model, null=0, precision=2^10, method="kernel", effects= c("fixed"), component= c("all"))
+p_direction(ivi_model)
+#Parameter         |     pd
+#  (Intercept)       |   100%
+#sigma_Intercept   | 91.47%
+#ftreatmenty       | 67.69%
+#brood_size_sc     |   100%
+#hatch_date_sc     | 87.52%
+#age_sc            |   100%
+#sigma_ftreatmenty | 91.38%
 
 ## b. IVI model without brood size as fixed effect 
 ivi_model2 <- brm(bf(logIVI ~ 1 + ftreatment + hatch_date_sc + age_sc +
@@ -335,6 +363,15 @@ ranef(ivi_model2)
 
 #p-map
 p_map(ivi_model2, null=0, precision=2^10, method="kernel", effects= c("all"), component= c("all"))
+p_direction(ivi_model2)
+#Parameter         |     pd
+#(Intercept)       |   100%
+#sigma_Intercept   | 94.55%
+#ftreatmenty       | 51.63%
+#hatch_date_sc     | 77.05%
+#age_sc            |   100%
+#sigma_ftreatmenty | 93.42%
+
 
 ### 2. fledging success i.e., probability of survival to fledging 
 
@@ -364,10 +401,12 @@ ranef(survival_prob_model2)
 
 # p-map
 p_map(survival_prob_model2, null=0, precision=2^10, method="kernel", effects= c("all"), component= c("all"))
-
-# out of curiosity:
-# probability that a parameter is strictly positive or negative 
 p_direction(survival_prob_model2)
+#Parameter         |     pd
+#(Intercept)       | 52.45%
+#ftreatment1       |   100%
+#number_hatched_sc | 96.43%
+#hatch_date_sc     | 99.92%
 
 
 ### 3. body mass at (assumed) fledging 
@@ -390,6 +429,16 @@ ranef(body_mass_fledge)
 
 # p-map
 p_map(body_mass_fledge, null=0, precision=2^10, method="kernel", effects= c("all"), component= c("all"))
+p_direction(body_mass_fledge)
+#Parameter         |     pd
+#(Intercept)       |   100%
+#sigma_Intercept   |   100%
+#ftreatment1       | 71.21%
+#brood_size_sc     | 91.29%
+#hatch_date_sc     | 80.55%
+#age_sc            | 95.45%
+#sigma_ftreatment1 | 75.39%
+
 
 ##### creating function for calculating proportion values -----
 
@@ -488,6 +537,9 @@ prop <- prop_opposite(body_mass_fledge, b_ftreatment1)
 prop <- prop_opposite(body_mass_fledge, b_brood_size_sc)
 prop <- prop_opposite(body_mass_fledge, b_hatch_date_sc)
 prop <- prop_opposite(body_mass_fledge, b_age_sc)
+
+##note to self:
+# just realized that the 'pr' value is just 1-p_direction so I didnt need to do that whole journey with the function creation etc.
 
 ##### creating figures -----
 # Create a data frame with control data included
@@ -613,6 +665,46 @@ ggsave(file_path, plot = final_plot, width = 12, height = 8, dpi = 600)
 
 
 
+##### creating quail ESM -----
+
+# 'ivi_data' has 'date' in the format dd/mm/yyyy
+# Convert 'date' in 'ivi_data' to the same format as 'Date' in 'quail'
+# Convert date columns to a common format
+ivi_data$date <- as.Date(ivi_data$date, format = "%d/%m/%Y")
+quail$Date <- as.Date(quail$Date, format = "%d-%b")
+
+# Merge dataframes
+merged_quail <- merge(ivi_data, quail, by.x = c("date", "year", "yearsite"), by.y = c("Date", "Year", "yearsite"), all = TRUE)
+
+merged_quail %>%
+  group_by(nestlingage, chicks,year) %>%
+  summarise(Supp = list(Supp)) %>%
+  ungroup() %>%
+  select(year, nestlingage, chicks, Supp) %>%
+  unnest(Supp) -> output_table
+
+output_table %>%
+  group_by(year, nestlingage, chicks) %>%
+  na.omit() %>% 
+  summarise(
+    min_supp = min(Supp, na.rm = TRUE),
+    max_supp = max(Supp, na.rm = TRUE),
+    mean_supp = mean(Supp, na.rm = TRUE)
+  ) -> summary_table
+
+summary_table %>%
+  mutate(range = paste(min_supp, max_supp, sep = "-")) %>%
+  arrange(year, nestlingage, chicks) -> summary_table_ordered_with_range
+
+summary_table_ordered_with_range %>%
+  select(-min_supp, -max_supp, -mean_supp) %>%
+  rename(
+    Year = year,
+    `Nestling Age` = nestlingage,
+    `Brood Size` = chicks,
+    `Number of Quail Provided (Range)` = range
+  ) -> summary_table_final
+
 ##### remove before publication -----
 
 ## testing quail data stuff
@@ -621,6 +713,7 @@ quail$Supp <- as.numeric(quail$Supp)
 
 #quail <- na.omit(quail)
 
+names(quail)
 
 # Convert "date" variable to date format
 quail$date <- as.Date(quail$date)
@@ -693,6 +786,20 @@ ggplot(results, aes(x = models, y = estimates, color = models)) +
        y = "Estimates") +
   theme_minimal() +
   theme(legend.position = "none")  # Remove legend if not needed
+
+
+# making esm for quail stuff
+
+
+
+
+
+
+
+
+
+
+
 
 ##old figure versions
 
