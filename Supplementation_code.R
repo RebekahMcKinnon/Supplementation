@@ -621,21 +621,128 @@ ggsave(file_path, plot = final_plot, width = 12, height = 8, dpi = 600)
 
 
 
+##### Remake figure as 3 panels in same row with control and supplemented labelled 
+
+# 1. IVI 
+# Create a data frame with control data included
+IVI <- data.frame(
+  estimates = c(5.00, 5.01), 
+  CIs_lower = c(4.77, 4.67), 
+  CIs_upper = c(5.24, 5.37), 
+  treatment = c("Control", "Supplemented"), 
+  color = factor(c("Control", "Supplemented"), levels = c("Control", "Supplemented")))
 
 
+# Colors
+colors <- c("cadetblue4", "burlywood4")
 
 
+# Plotting
+ggplot(IVI, aes(x = treatment, y = estimates, color = color)) +
+  geom_point(position = position_dodge(width = 0.2), size = 3) +
+  geom_errorbar(
+    aes(ymin = CIs_lower, ymax = CIs_upper),
+    position = position_dodge(width = 0.2),
+    width = 0.2
+  ) +
+  scale_color_manual(values = colors) +
+  labs(
+    x = "Treatment",
+    y = "logIVI (minutes)",
+    color = "Treatment"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",  # Remove legend
+    panel.grid.major = element_blank(),  # Remove background grid lines
+    panel.grid.minor = element_blank(),  # Remove background grid lines
+    axis.line = element_line(color = "black"),  # Add black axis lines
+    text = element_text(size = 14),  # Set text size to 14
+    axis.title = element_text(face = "bold", size = 14),  # Bold and size 14 axis titles
+    plot.title = element_text(face = "bold", size = 14)  # Bold and size 14 plot title
+  ) +
+  scale_y_continuous(limits = c(4.5, 5.4), breaks = seq(4.5, 5.4, by = 0.1))  # Set y-axis limits and breaks
 
 
+# 2. Survival 
+# Create a data frame with control data included
+Survival <- data.frame(
+  estimates = c(-0.08, 2.31), 
+  CIs_lower = c(-1.43, -0.32), 
+  CIs_upper = c(1.19, 5.12), 
+  treatment = c("Control", "Supplemented"), 
+  color = factor(c("Control", "Supplemented"), levels = c("Control", "Supplemented")))
 
 
+# Colors
+colors <- c("cadetblue4", "burlywood4")
 
 
+# Plotting
+ggplot(Survival, aes(x = treatment, y = estimates, color = color)) +
+  geom_point(position = position_dodge(width = 0.2), size = 3) +
+  geom_errorbar(
+    aes(ymin = CIs_lower, ymax = CIs_upper),
+    position = position_dodge(width = 0.2),
+    width = 0.2
+  ) +
+  scale_color_manual(values = colors) +
+  labs(
+    x = "Treatment",
+    y = "Relative Probability of Survival",
+    color = "Treatment"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",  # Remove legend
+    panel.grid.major = element_blank(),  # Remove background grid lines
+    panel.grid.minor = element_blank(),  # Remove background grid lines
+    axis.line = element_line(color = "black"),  # Add black axis lines
+    text = element_text(size = 14),  # Set text size to 14
+    axis.title = element_text(face = "bold", size = 14),  # Bold and size 14 axis titles
+    plot.title = element_text(face = "bold", size = 14)  # Bold and size 14 plot title
+  ) +
+  scale_y_continuous(limits = c(-2, 6), breaks = seq(-2, 6, by = 1))  # Set y-axis limits and breaks
 
 
+# 3. Body Condition 
+Body_condition <- data.frame(
+  estimates = c(635.89, 647.15), 
+  CIs_lower = c(552.75, 524.2), 
+  CIs_upper = c(712.52, 764.24), 
+  treatment = c("Control", "Supplemented"), 
+  color = factor(c("Control", "Supplemented"), levels = c("Control", "Supplemented")))
 
 
+# Colors
+colors <- c("cadetblue4", "burlywood4")
 
+
+# Plotting
+ggplot(Body_condition, aes(x = treatment, y = estimates, color = color)) +
+  geom_point(position = position_dodge(width = 0.2), size = 3) +
+  geom_errorbar(
+    aes(ymin = CIs_lower, ymax = CIs_upper),
+    position = position_dodge(width = 0.2),
+    width = 0.2
+  ) +
+  scale_color_manual(values = colors) +
+  labs(
+    x = "Treatment",
+    y = "Mass (g)",
+    color = "Treatment"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",  # Remove legend
+    panel.grid.major = element_blank(),  # Remove background grid lines
+    panel.grid.minor = element_blank(),  # Remove background grid lines
+    axis.line = element_line(color = "black"),  # Add black axis lines
+    text = element_text(size = 14),  # Set text size to 14
+    axis.title = element_text(face = "bold", size = 14),  # Bold and size 14 axis titles
+    plot.title = element_text(face = "bold", size = 14)  # Bold and size 14 plot title
+  ) +
+  scale_y_continuous(limits = c(500, 800), breaks = seq(500, 800, by = 50))  # Set y-axis limits and breaks
 
 
 
