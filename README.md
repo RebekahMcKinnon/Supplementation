@@ -2,9 +2,9 @@
 Git hub repository for manuscript titled: 'Food Supplementation of Peregrine Falcons (Falco peregrinus tundrius) Improves Offspring Survival Without Changes in Parental Provisioning Behaviour or Fledgling Body Condition'
 
 # Co-authors 
-Rebekah A. McKinnon,
-Kevin Hawkshaw,
-Erik Hedlin, and
+Rebekah A. McKinnon*,
+Erik Hedlin*, 
+Kevin Hawkshaw, and
 Kimberley J. Mathot 
 
 # Research abstract 
