@@ -614,14 +614,13 @@ final_plot
 
 # save fig in high res 
 # Specify the file path and name
-file_path <- "G:/.shortcut-targets-by-id/15aIOTzK-SdA0QZzPxWaQk_8cNO0OoEUl/Rebekah thesis/SUPPLEMENTATION PAPER/figures/Supp_Figure_1_600DPI.tiff"
+#file_path <- "G:/.shortcut-targets-by-id/15aIOTzK-SdA0QZzPxWaQk_8cNO0OoEUl/Rebekah thesis/SUPPLEMENTATION PAPER/figures/Supp_Figure_1_600DPI.tiff"
   
 # Save the combined plot with high DPI
-ggsave(file_path, plot = final_plot, width = 12, height = 8, dpi = 600)
+#ggsave(file_path, plot = final_plot, width = 12, height = 8, dpi = 600)
 
 
-
-##### Remake figure as 3 panels in same row with control and supplemented labelled 
+##### Remake figure 1 -----
 
 # 1. IVI 
 # Create a data frame with control data included
@@ -638,7 +637,7 @@ colors <- c("cadetblue4", "burlywood4")
 
 
 # Plotting
-ggplot(IVI, aes(x = treatment, y = estimates, color = color)) +
+IVI_plot <- ggplot(IVI, aes(x = treatment, y = estimates, color = color)) +
   geom_point(position = position_dodge(width = 0.2), size = 3) +
   geom_errorbar(
     aes(ymin = CIs_lower, ymax = CIs_upper),
@@ -648,7 +647,7 @@ ggplot(IVI, aes(x = treatment, y = estimates, color = color)) +
   scale_color_manual(values = colors) +
   labs(
     x = "Treatment",
-    y = "logIVI (minutes)",
+    y = "log IVI (minutes)",
     color = "Treatment"
   ) +
   theme_minimal() +
@@ -659,8 +658,8 @@ ggplot(IVI, aes(x = treatment, y = estimates, color = color)) +
     axis.line = element_line(color = "black"),  # Add black axis lines
     text = element_text(size = 14),  # Set text size to 14
     axis.title = element_text(face = "bold", size = 14),  # Bold and size 14 axis titles
-    plot.title = element_text(face = "bold", size = 14)  # Bold and size 14 plot title
-  ) +
+    axis.text.x = element_text(face = "bold"),
+    axis.title.x = element_blank()) +
   scale_y_continuous(limits = c(4.5, 5.4), breaks = seq(4.5, 5.4, by = 0.1))  # Set y-axis limits and breaks
 
 
@@ -679,7 +678,7 @@ colors <- c("cadetblue4", "burlywood4")
 
 
 # Plotting
-ggplot(Survival, aes(x = treatment, y = estimates, color = color)) +
+Survival_plot <- ggplot(Survival, aes(x = treatment, y = estimates, color = color)) +
   geom_point(position = position_dodge(width = 0.2), size = 3) +
   geom_errorbar(
     aes(ymin = CIs_lower, ymax = CIs_upper),
@@ -689,7 +688,7 @@ ggplot(Survival, aes(x = treatment, y = estimates, color = color)) +
   scale_color_manual(values = colors) +
   labs(
     x = "Treatment",
-    y = "Relative Probability of Survival",
+    y = "Survival (log odds ratio)",
     color = "Treatment"
   ) +
   theme_minimal() +
@@ -700,8 +699,8 @@ ggplot(Survival, aes(x = treatment, y = estimates, color = color)) +
     axis.line = element_line(color = "black"),  # Add black axis lines
     text = element_text(size = 14),  # Set text size to 14
     axis.title = element_text(face = "bold", size = 14),  # Bold and size 14 axis titles
-    plot.title = element_text(face = "bold", size = 14)  # Bold and size 14 plot title
-  ) +
+    axis.text.x = element_text(face = "bold"),
+    axis.title.x = element_blank()) +
   scale_y_continuous(limits = c(-2, 6), breaks = seq(-2, 6, by = 1))  # Set y-axis limits and breaks
 
 
@@ -719,7 +718,7 @@ colors <- c("cadetblue4", "burlywood4")
 
 
 # Plotting
-ggplot(Body_condition, aes(x = treatment, y = estimates, color = color)) +
+Bodycon_plot <- ggplot(Body_condition, aes(x = treatment, y = estimates, color = color)) +
   geom_point(position = position_dodge(width = 0.2), size = 3) +
   geom_errorbar(
     aes(ymin = CIs_lower, ymax = CIs_upper),
@@ -729,7 +728,7 @@ ggplot(Body_condition, aes(x = treatment, y = estimates, color = color)) +
   scale_color_manual(values = colors) +
   labs(
     x = "Treatment",
-    y = "Mass (g)",
+    y = "Mass (grams)",
     color = "Treatment"
   ) +
   theme_minimal() +
@@ -740,18 +739,24 @@ ggplot(Body_condition, aes(x = treatment, y = estimates, color = color)) +
     axis.line = element_line(color = "black"),  # Add black axis lines
     text = element_text(size = 14),  # Set text size to 14
     axis.title = element_text(face = "bold", size = 14),  # Bold and size 14 axis titles
-    plot.title = element_text(face = "bold", size = 14)  # Bold and size 14 plot title
-  ) +
+    axis.text.x = element_text(face = "bold"),
+    axis.title.x = element_blank()) +
   scale_y_continuous(limits = c(500, 800), breaks = seq(500, 800, by = 50))  # Set y-axis limits and breaks
 
 
+# Arrange figures side by side
+combined_plot <- (IVI_plot + Survival_plot + Bodycon_plot) +
+  plot_annotation(tag_levels = "A")
+
+combined_plot
 
 
+# save fig in high res 
+# Specify the file path and name
+file_path <- "G:/.shortcut-targets-by-id/15aIOTzK-SdA0QZzPxWaQk_8cNO0OoEUl/Rebekah thesis/SUPPLEMENTATION PAPER/figures/Supp_Figure_1_600DPI.tiff"
 
-
-
-
-
+# Save the combined plot with high DPI
+ggsave(file_path, plot = combined_plot, width = 24, height = 8, dpi = 600)
 
 
 
